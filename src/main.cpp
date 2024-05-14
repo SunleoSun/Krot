@@ -5,6 +5,8 @@
 #define MAX_SOUND_DURATION 10000
 #define ELAPSED(time, dur) ((millis() - time > dur) || (millis() < time))
 #define GET_RANDOM_CHANNEL random(0, 9)
+#define KROT_DISABLE_PIN D3
+#define MOUSE_DISABLE_PIN D8
 
 typedef uint8_t ui8;
 typedef uint16_t ui16;
@@ -27,7 +29,6 @@ ui16 krotDuration;
 ui16 mouseDuration;
 
 void OpenChannel(ui8 ch, const PinIndex pinMatrix[]);
-void SilentMultiplexer(const PinIndex pinMatrix[]);
 void updateKrotDuration();
 void updateMouseDuration();
 
@@ -39,12 +40,16 @@ void setup()
   digitalWrite(D1, LOW);
   pinMode(D2, OUTPUT);
   digitalWrite(D2, LOW);
+  pinMode(KROT_DISABLE_PIN, OUTPUT);
+  digitalWrite(KROT_DISABLE_PIN, LOW);
   pinMode(D5, OUTPUT);
   digitalWrite(D5, LOW);
   pinMode(D6, OUTPUT);
   digitalWrite(D6, LOW);
   pinMode(D7, OUTPUT);
   digitalWrite(D7, LOW);
+  pinMode(MOUSE_DISABLE_PIN, OUTPUT);
+  digitalWrite(MOUSE_DISABLE_PIN, LOW);
   randomSeed(analogRead(A0));
   updateKrotDuration();
   updateMouseDuration();
@@ -58,10 +63,11 @@ void loop() {
     updateKrotDuration();
     if (isKrotSilence)
     {
-      SilentMultiplexer(pinMatrixKrotFreq);
+      digitalWrite(KROT_DISABLE_PIN, HIGH);
     }
     else
     {
+      digitalWrite(KROT_DISABLE_PIN, LOW);
       OpenChannel(GET_RANDOM_CHANNEL, pinMatrixKrotFreq);
     }
     isKrotSilence = !isKrotSilence;
@@ -71,10 +77,11 @@ void loop() {
     updateMouseDuration();
     if (isMouseSilence)
     {
-      SilentMultiplexer(pinMatrixMouseFreq);
+      digitalWrite(MOUSE_DISABLE_PIN, HIGH);
     }
     else
     {
+      digitalWrite(MOUSE_DISABLE_PIN, LOW);
       OpenChannel(GET_RANDOM_CHANNEL, pinMatrixMouseFreq);
     }
     isMouseSilence = !isMouseSilence;
@@ -108,9 +115,4 @@ void OpenChannel(ui8 ch, const PinIndex pinMatrix[])
       digitalWrite(pinMatrix[i].pin, LOW);
     }
   }
-}
-
-void SilentMultiplexer(const PinIndex pinMatrix[])
-{
-  OpenChannel(-1, pinMatrix);
 }
